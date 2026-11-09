@@ -3,6 +3,7 @@ package io.github.mugishajc.tasks.service;
 import io.github.mugishajc.tasks.api.PageResponse;
 import io.github.mugishajc.tasks.api.TaskRequest;
 import io.github.mugishajc.tasks.api.TaskResponse;
+import io.github.mugishajc.tasks.api.TaskStats;
 import io.github.mugishajc.tasks.domain.Task;
 import io.github.mugishajc.tasks.domain.TaskPriority;
 import io.github.mugishajc.tasks.domain.TaskStatus;
@@ -16,6 +17,7 @@ import jakarta.transaction.Transactional;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @ApplicationScoped
 public class TaskService {
@@ -36,6 +38,16 @@ public class TaskService {
                 .map(task -> TaskResponse.from(task, today))
                 .toList();
         return new PageResponse<>(items, page, size, query.count(), query.pageCount());
+    }
+
+    public TaskStats stats() {
+        Map<TaskStatus, Long> byStatus = repository.countByStatus();
+        long total = byStatus.values().stream().mapToLong(Long::longValue).sum();
+        long open = byStatus.entrySet().stream()
+                .filter(e -> !e.getKey().isClosed())
+                .mapToLong(Map.Entry::getValue)
+                .sum();
+        return new TaskStats(total, open, repository.countOverdue(today()), byStatus);
     }
 
     public TaskResponse get(long id) {

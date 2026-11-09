@@ -59,6 +59,12 @@ public class TaskResource {
     }
 
     @GET
+    @Path("/stats")
+    public TaskStats stats() {
+        return service.stats();
+    }
+
+    @GET
     @Path("/{id}")
     public TaskResponse get(@PathParam("id") long id) {
         return service.get(id);
