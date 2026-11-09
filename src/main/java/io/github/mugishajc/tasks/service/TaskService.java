@@ -1,10 +1,14 @@
 package io.github.mugishajc.tasks.service;
 
+import io.github.mugishajc.tasks.api.PageResponse;
 import io.github.mugishajc.tasks.api.TaskRequest;
 import io.github.mugishajc.tasks.api.TaskResponse;
 import io.github.mugishajc.tasks.domain.Task;
 import io.github.mugishajc.tasks.domain.TaskPriority;
+import io.github.mugishajc.tasks.repository.TaskFilter;
 import io.github.mugishajc.tasks.repository.TaskRepository;
+import io.quarkus.hibernate.orm.panache.PanacheQuery;
+import io.quarkus.panache.common.Page;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
@@ -23,11 +27,14 @@ public class TaskService {
         this.clock = clock;
     }
 
-    public List<TaskResponse> listAll() {
+    public PageResponse<TaskResponse> list(TaskFilter filter, int page, int size, String sort) {
         LocalDate today = today();
-        return repository.listAll().stream()
+        PanacheQuery<Task> query = repository.search(filter, today, TaskSort.parse(sort))
+                .page(Page.of(page, size));
+        List<TaskResponse> items = query.list().stream()
                 .map(task -> TaskResponse.from(task, today))
                 .toList();
+        return new PageResponse<>(items, page, size, query.count(), query.pageCount());
     }
 
     public TaskResponse get(long id) {

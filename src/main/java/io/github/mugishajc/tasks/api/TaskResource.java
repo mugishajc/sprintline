@@ -1,22 +1,28 @@
 package io.github.mugishajc.tasks.api;
 
+import io.github.mugishajc.tasks.domain.TaskPriority;
+import io.github.mugishajc.tasks.domain.TaskStatus;
+import io.github.mugishajc.tasks.repository.TaskFilter;
 import io.github.mugishajc.tasks.service.TaskService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.UriInfo;
 import org.jboss.resteasy.reactive.RestResponse;
 
 import java.net.URI;
-import java.util.List;
 
 @Path("/api/tasks")
 @Produces(MediaType.APPLICATION_JSON)
@@ -30,8 +36,25 @@ public class TaskResource {
     }
 
     @GET
-    public List<TaskResponse> list() {
-        return service.listAll();
+    public PageResponse<TaskResponse> list(
+            @QueryParam("status") String status,
+            @QueryParam("priority") String priority,
+            @QueryParam("dueBefore") String dueBefore,
+            @QueryParam("dueAfter") String dueAfter,
+            @QueryParam("q") String text,
+            @QueryParam("overdue") Boolean overdue,
+            @QueryParam("page") @DefaultValue("0") @Min(0) int page,
+            @QueryParam("size") @DefaultValue("20") @Min(1) @Max(100) int size,
+            @QueryParam("sort") @DefaultValue("-createdAt") String sort) {
+
+        TaskFilter filter = new TaskFilter(
+                QueryParams.parseEnum(TaskStatus.class, "status", status),
+                QueryParams.parseEnum(TaskPriority.class, "priority", priority),
+                QueryParams.parseDate("dueBefore", dueBefore),
+                QueryParams.parseDate("dueAfter", dueAfter),
+                text,
+                overdue);
+        return service.list(filter, page, size, sort);
     }
 
     @GET
