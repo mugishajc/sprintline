@@ -1,6 +1,8 @@
 package io.github.mugishajc.tasks.api;
 
 import io.github.mugishajc.tasks.service.TaskService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
@@ -39,7 +41,7 @@ public class TaskResource {
     }
 
     @POST
-    public RestResponse<TaskResponse> create(TaskRequest request, UriInfo uriInfo) {
+    public RestResponse<TaskResponse> create(@Valid @NotNull TaskRequest request, UriInfo uriInfo) {
         TaskResponse created = service.create(request);
         URI location = uriInfo.getAbsolutePathBuilder().path(String.valueOf(created.id())).build();
         return RestResponse.ResponseBuilder.<TaskResponse>created(location).entity(created).build();
@@ -47,7 +49,7 @@ public class TaskResource {
 
     @PUT
     @Path("/{id}")
-    public TaskResponse update(@PathParam("id") long id, TaskRequest request) {
+    public TaskResponse update(@PathParam("id") long id, @Valid @NotNull TaskRequest request) {
         return service.update(id, request);
     }
 
