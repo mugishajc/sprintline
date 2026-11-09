@@ -8,7 +8,6 @@ release.properties
 # IDE
 .idea/
 *.iml
-.vscode/
 .project
 .classpath
 .settings/
@@ -20,3 +19,5 @@ release.properties
 # Quarkus
 .quarkus/
 quarkus.log*
+config.bat
+node_modules
