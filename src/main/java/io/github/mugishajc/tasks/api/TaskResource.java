@@ -12,6 +12,7 @@ import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.PATCH;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
@@ -74,6 +75,12 @@ public class TaskResource {
     @Path("/{id}")
     public TaskResponse update(@PathParam("id") long id, @Valid @NotNull TaskRequest request) {
         return service.update(id, request);
+    }
+
+    @PATCH
+    @Path("/{id}/status")
+    public TaskResponse changeStatus(@PathParam("id") long id, @Valid @NotNull StatusChangeRequest request) {
+        return service.changeStatus(id, request.status());
     }
 
     @DELETE

@@ -5,6 +5,7 @@ import io.github.mugishajc.tasks.api.TaskRequest;
 import io.github.mugishajc.tasks.api.TaskResponse;
 import io.github.mugishajc.tasks.domain.Task;
 import io.github.mugishajc.tasks.domain.TaskPriority;
+import io.github.mugishajc.tasks.domain.TaskStatus;
 import io.github.mugishajc.tasks.repository.TaskFilter;
 import io.github.mugishajc.tasks.repository.TaskRepository;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
@@ -54,6 +55,23 @@ public class TaskService {
         Task task = load(id);
         apply(task, request);
         // flush so the @PreUpdate timestamp is reflected in the response
+        repository.flush();
+        return TaskResponse.from(task, today());
+    }
+
+    @Transactional
+    public TaskResponse changeStatus(long id, TaskStatus next) {
+        Task task = load(id);
+        TaskStatus current = task.getStatus();
+        if (current == next) {
+            // idempotent: repeating the same request is not an error
+            return TaskResponse.from(task, today());
+        }
+        if (!current.canMoveTo(next)) {
+            throw new InvalidStatusTransitionException(current, next);
+        }
+        task.setStatus(next);
+        task.setCompletedAt(next == TaskStatus.DONE ? clock.instant() : null);
         repository.flush();
         return TaskResponse.from(task, today());
     }
